@@ -1,0 +1,68 @@
+#include <stdio.h> //bilbioteka nagłówkowa dla standard Input Output (wejście, wyjście)
+#include <stdlib.h> //zawiera deklaracje funkcji służących do przekształcnia liczb, przydzielenia pamięci 
+#include <netdb.h> //biblioteka,która udostępnia typ in_port, in_addr i hostent(opis hosta internetowego)
+#include <arpa/inet.h> //biblioteka udostępnia typ in_port i in_addr
+#include <netinet/in.h> //rodzina protokołów internetowych: in_port niedopisany całkowity typ dokładnie 16 bitów, in_addr niedopisany całkowity typ dokładnie 32 bitów
+#include <string.h> //definiuje kilka funkcji do manipulowania łańcuchami i tablicami
+#include <unistd.h> //definiuje różne stałe i typy symboliczne
+
+string perror() {
+	return "ERROR CONNECTING"
+}
+
+int main(int argc, char *argv[]) //argc-liczba argumentów, char *agrv[]-zawiera ocie?ke wywo3ania i parametry podane wraz z jego parametrami
+{
+	int sockfd, n; //deskryptor gniazda po31czenia, które chcemy zamkn1a; zmienna n
+	struct sockaddr_in serverAddr; //adres serwera
+	struct hostent *server; //zwraca adres serwera
+	char buffer[2048]; //dane pamieci , bufor znaków
+	char *add = "127.0.0.1"; //dodanie do wskaYnika IP
+	int port = 8888; //zmienna numeru portu
+	int i; //zmienna i
+
+	puts("*****Client*****"); //zapisuje strumien do klienta
+
+	if (argv[1] != 0 && argv[2] != 0) //pierwszy ci1g wynosi zero, drugi ci1g te? wynosi zero
+	{
+		add = argv[1]; //dodajemy wskaYnik do nazwy programu
+		port = atoi(argv[2]); //do portu dodajemy wartooci liczbowe do drugiego wskaYnika 
+	}
+	printf("set: %s:%d\n", add, port); //zapis %d informuje, ?e argumentem bedzie liczba ca3kowita, natomiast %s mówi o funkcji, ?e bedzie to 3ancuch znaków; printf znaczy formatowanie znaków
+
+	sockfd = socket(AF_INET, SOCK_STREAM, 0); //funkcja socket()zwraca deskryptor gniazda; AF_INET(IPv4) obs3uguje wiele protoko3ów; SOCK_STREAM-po31czenie zostaje nawi1zane, a obie strony maj1 rozmowe, dopóki po31czenie nie zostanie przerwane przez jedn1 ze stron lub b31d sieci.
+	serverAddr.sin_family = AF_INET; //serwer okreola rodzine adresów
+	serverAddr.sin_port = htons(port); //serwer podaje numer portu i pod31czenia
+	serverAddr.sin_addr.s_addr = inet_addr(add); //serwer dodaje adres lokalny bez przekazywania portu
+
+	//po31czenie z serverem
+	if (connect(sockfd, (struct sockaddr*) &serverAddr, sizeof(serverAddr)) < 0) //connect pobiera desktryptor, informacje o adresie i rozmiar drugiego parametru. które jest mniejsze od 0 
+	{
+		printf(perror);
+		//exit(1);
+	}
+
+	while (1) // petla while 
+	{
+		//send //wysy3anie
+		bzero(buffer, 2048); //kopiuje do 3ancucha dane 
+		//scanf("%s",buffer); //wczytuje dane pamieci; %s 3ancuch znaków
+		i = 0;// int jest równe 0
+		while ((buffer[i++] = getchar()) != '\n') //dane pamieci zwiekszamy o 1,odczytuje znak bufora do konca I ODRZUCA JE, znak nowej linii
+		{
+
+		}
+		send(sockfd, buffer, strlen(buffer), 0); //wysy3anie deskryptu, pamieci danych, zliczanie bajtów w 3ancuchu; petla(strlen) przechodzi przez ci1g podczas liczenia, a? osi1gnie koncowy bajt NULL
+		if (buffer[0] == '!' && buffer[1] == 'q') //jeoli dane pamieci bufora [0] neguj1 i zwrac1 wartooa true, gdy buffer[1] jest równy q
+		{
+			send(sockfd, "*****client offline*****", 24, 0); //wyolij desktryptor do klienta offline i wyzeruj
+			break; //przerwanie aktualnej petli
+		}
+		//read //czytaj
+		bzero(buffer, 2048); //skopiuj zero do ci1gu (kopiuje do 3ancucha s n bajtów, ka?dy o wartooci zero)
+		read(sockfd, buffer, 2048); // czytaj desktryptor, dane pamieci
+		printf("%s", buffer); //Wypisuje tekst sformatowany na standardowym strumieniu wyjocia
+	}
+	close(sockfd); //zamykanie desktryptora
+	puts("[+]DONE!"); //zapisuje 3ancuch znaków do standardowego strumienia wyjocia
+	return 0; //zwraca 0
+}
